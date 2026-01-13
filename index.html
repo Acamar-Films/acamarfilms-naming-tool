@@ -1,190 +1,157 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>BNG Naming Convention Generator</title>
+  <title>Acamar Films Naming Convention Generator</title>
   <style>
-    body { font-family: Arial; max-width: 900px; margin: 30px auto; padding: 20px; line-height: 1.6; }
-    select, input { width: 100%; padding: 10px; margin: 10px 0 20px; }
+    body { font-family: Arial; max-width: 1000px; margin: 30px auto; padding: 20px; }
+    select, input, textarea, button {
+      width: 100%;
+      padding: 10px;
+      margin: 8px 0 16px;
+      font-size: 14px;
+    }
+    textarea { height: 200px; }
     .tool { display: none; }
-    #output { margin-top: 20px; padding: 20px; background: #f3f3f3;
-              border: 1px solid #ccc; font-size: 18px; font-weight: bold; }
+    #output { white-space: pre; background: #f3f3f3; border: 1px solid #ccc; padding: 15px; }
+    .row { display: flex; gap: 10px; }
+    .row button { width: auto; flex: 1; }
   </style>
 </head>
 <body>
 
-<h1>BNG Naming Convention Generator</h1>
+<h1>Acamar Films Naming Convention Generator</h1>
 
+<!-- Tool Selector -->
 <label>Choose Tool</label>
 <select id="toolSelect" onchange="showTool()">
   <option value="">-- Select --</option>
   <option value="stems">Audio Stems</option>
-  <option value="screeners">Screeners</option>
-  <option value="afl">AFL Master Videos</option>
-  <option value="ptmix">Pro Tools Mix/Stems Session</option>
-  <option value="ptdx">Pro Tools DX Edit Session</option>
-  <option value="rawlines">Raw Recording Line Files</option>
-  <option value="editedlines">Edited Line Files</option>
-  <option value="uneditedsession">Unedited Record PT Session</option>
-  <option value="tracklabel">Record Track Label</option>
-  <option value="uneditedfiles">Unedited Record Files</option>
 </select>
+
+<!-- Episode Manager -->
+<h2>Episode List</h2>
+<textarea id="episodeEditor"
+placeholder="EP01|Pilot
+EP02|The First Test
+EP03|Unexpected Results"></textarea>
+
+<div class="row">
+  <button onclick="saveEpisodes()">Save Episodes</button>
+  <button onclick="loadEpisodes()">Load Episodes</button>
+</div>
+
+<hr>
 
 <!-- Audio Stems -->
 <div id="stems" class="tool">
-  <h3>Audio Stems</h3>
-  <label>Territory</label><input id="stm_terr">
-  <label>Episode Number</label><input id="stm_ep">
-  <label>Episode Name</label><input id="stm_epname">
-  <label>Format (Stereo or 5.1)</label><input id="stm_fmt">
-  <label>Stem Type (FMX / DX / ME)</label><input id="stm_type">
+  <h3>Audio Stems (Batch Enabled)</h3>
+
+  <label>Territory</label>
+  <input id="stm_terr" placeholder="US">
+
+  <label>Episode</label>
+  <select id="stm_episode"></select>
+
+  <label>Format (Stereo / 5.1)</label>
+  <input id="stm_fmt" placeholder="5.1">
+
+  <label>Stem Types (comma separated)</label>
+  <input id="stm_types" placeholder="FMX, DX, ME">
+
   <button onclick="genStems()">Generate</button>
 </div>
 
-<!-- Screeners -->
-<div id="screeners" class="tool">
-  <h3>Screeners</h3>
-  <label>Date (YYMMDD)</label><input id="scr_date">
-  <label>Language</label><input id="scr_lang">
-  <label>Episode Number</label><input id="scr_ep">
-  <label>Episode Name</label><input id="scr_name">
-  <label>Pass (e.g. Pass 1, Pass 2, AFL_FINAL)</label><input id="scr_pass">
-  <button onclick="genScreener()">Generate</button>
-</div>
-
-<!-- AFL Masters -->
-<div id="afl" class="tool">
-  <h3>AFL Master Video Files</h3>
-  <label>Date (YYMMDD)</label><input id="afl_date">
-  <label>Language Code</label><input id="afl_lang">
-  <label>Episode Number</label><input id="afl_ep">
-  <label>Episode Name</label><input id="afl_name">
-  <button onclick="genAFL()">Generate</button>
-</div>
-
-<!-- PT Mix & Stems -->
-<div id="ptmix" class="tool">
-  <h3>Pro Tools Session (Mix/Stems)</h3>
-  <label>Territory</label><input id="ptm_terr">
-  <label>Episode Number</label><input id="ptm_ep">
-  <label>Episode Name</label><input id="ptm_name">
-  <button onclick="genPTMix()">Generate</button>
-</div>
-
-<!-- PT DX Edit -->
-<div id="ptdx" class="tool">
-  <h3>Pro Tools DX Edit Session</h3>
-  <label>Territory</label><input id="ptd_terr">
-  <label>Episode Number</label><input id="ptd_ep">
-  <label>Episode Name</label><input id="ptd_name">
-  <button onclick="genPTDX()">Generate</button>
-</div>
-
-<!-- Raw Lines -->
-<div id="rawlines" class="tool">
-  <h3>Raw Recording Line Files</h3>
-  <label>Territory</label><input id="raw_terr">
-  <label>Episode Number</label><input id="raw_ep">
-  <label>Character Name</label><input id="raw_char">
-  <label>Actor Initials</label><input id="raw_init">
-  <label>Line Number (e.g. Line037)</label><input id="raw_line">
-  <label>Take Number (_01 / _02 / _03)</label><input id="raw_take">
-  <button onclick="genRawLines()">Generate</button>
-</div>
-
-<!-- Edited Line Files -->
-<div id="editedlines" class="tool">
-  <h3>Edited Line Files</h3>
-  <label>Territory</label><input id="edt_terr">
-  <label>Category</label><input id="edt_cat">
-  <label>Character Name</label><input id="edt_char">
-  <label>Line Number (e.g. Line 1)</label><input id="edt_line">
-  <label>Line (in English)</label><input id="edt_text">
-  <label>Take Letter (a / b / c)</label><input id="edt_take">
-  <button onclick="genEdited()">Generate</button>
-</div>
-
-<!-- Unedited Record Session -->
-<div id="uneditedsession" class="tool">
-  <h3>Unedited Record File – Pro Tools Session</h3>
-  <label>Territory</label><input id="uns_terr">
-  <label>Category</label><input id="uns_cat">
-  <label>Character Name</label><input id="uns_char">
-  <label>Date (DDMMYY)</label><input id="uns_date">
-  <button onclick="genUneditedSession()">Generate</button>
-</div>
-
-<!-- Track Labels -->
-<div id="tracklabel" class="tool">
-  <h3>Record Track Label</h3>
-  <label>Territory</label><input id="trk_terr">
-  <label>Category</label><input id="trk_cat">
-  <label>Character Name</label><input id="trk_char">
-  <button onclick="genTrack()">Generate</button>
-</div>
-
-<!-- Unedited File Outputs -->
-<div id="uneditedfiles" class="tool">
-  <h3>Unedited Record Files</h3>
-  <label>Territory</label><input id="unf_terr">
-  <label>Category</label><input id="unf_cat">
-  <label>Character Name</label><input id="unf_char">
-  <label>Take Number (_01, _02, _03)</label><input id="unf_take">
-  <button onclick="genUneditedFiles()">Generate</button>
-</div>
-
+<h3>Output</h3>
 <div id="output"></div>
 
+<div class="row">
+  <button onclick="copyOutput()">Copy to Clipboard</button>
+  <button onclick="downloadCSV()">Download CSV</button>
+</div>
+
 <script>
+/* ---------------- EPISODES ---------------- */
+
+let episodes = [];
+
+function saveEpisodes() {
+  const lines = episodeEditor.value.split("\n");
+  episodes = lines.map(l => {
+    const [num, name] = l.split("|");
+    return { num: num?.trim(), name: name?.trim() };
+  }).filter(e => e.num && e.name);
+
+  localStorage.setItem("acamarEpisodes", JSON.stringify(episodes));
+  populateEpisodeDropdown();
+  alert("Episodes saved!");
+}
+
+function loadEpisodes() {
+  const stored = localStorage.getItem("acamarEpisodes");
+  if (!stored) return;
+
+  episodes = JSON.parse(stored);
+  episodeEditor.value = episodes.map(e => `${e.num}|${e.name}`).join("\n");
+  populateEpisodeDropdown();
+}
+
+function populateEpisodeDropdown() {
+  const sel = document.getElementById("stm_episode");
+  sel.innerHTML = "";
+  episodes.forEach(e => {
+    const opt = document.createElement("option");
+    opt.value = `${e.num}_${e.name}`;
+    opt.textContent = `${e.num} – ${e.name}`;
+    sel.appendChild(opt);
+  });
+}
+
+/* ---------------- TOOLS ---------------- */
 
 function showTool() {
   document.querySelectorAll('.tool').forEach(t => t.style.display = "none");
-  const id = document.getElementById("toolSelect").value;
+  const id = toolSelect.value;
   if (id) document.getElementById(id).style.display = "block";
-  document.getElementById("output").innerHTML = "";
+  output.textContent = "";
 }
 
-function out(x){ document.getElementById("output").innerText = x; }
+/* ---------------- GENERATORS ---------------- */
+
+let lastOutput = [];
 
 function genStems() {
-  out(`BNG_${stm_terr.value}_${stm_ep.value}_${stm_epname.value}_${stm_fmt.value}_${stm_type.value}`);
+  const types = stm_types.value.split(",").map(t => t.trim());
+  const ep = stm_episode.value;
+
+  lastOutput = types.map(type =>
+    `BNG_${stm_terr.value}_${ep}_${stm_fmt.value}_${type}`
+  );
+
+  output.textContent = lastOutput.join("\n");
 }
 
-function genScreener() {
-  out(`${scr_date.value}_BNG_${scr_lang.value}_${scr_ep.value}_${scr_name.value}_${scr_pass.value}.mp4`);
+/* ---------------- UTILITIES ---------------- */
+
+function copyOutput() {
+  navigator.clipboard.writeText(output.textContent);
+  alert("Copied to clipboard!");
 }
 
-function genAFL() {
-  out(`${afl_date.value}_BNG_${afl_lang.value}_${afl_ep.value}_${afl_name.value}_AFL_FINAL.mov`);
+function downloadCSV() {
+  if (!lastOutput.length) return;
+  const csv = lastOutput.join("\n");
+  const blob = new Blob([csv], { type: "text/csv" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "Acamar_Filenames.csv";
+  a.click();
 }
 
-function genPTMix() {
-  out(`BNG_${ptm_terr.value}_${ptm_ep.value}_${ptm_name.value}_ProTools`);
-}
+/* ---------------- INIT ---------------- */
 
-function genPTDX() {
-  out(`BNG_${ptd_terr.value}_${ptd_ep.value}_${ptd_name.value}_DX Edit`);
-}
-
-function genRawLines() {
-  out(`BNG_${raw_terr.value}_${raw_ep.value}_${raw_char.value}_${raw_init.value}_${raw_line.value}${raw_take.value}`);
-}
-
-function genEdited() {
-  out(`BNG_${edt_terr.value}_${edt_cat.value}_${edt_char.value}_${edt_line.value}_${edt_text.value}_${edt_take.value}`);
-}
-
-function genUneditedSession() {
-  out(`BNG_${uns_terr.value}_${uns_cat.value}_${uns_char.value}_ProToolsSession_${uns_date.value}`);
-}
-
-function genTrack() {
-  out(`BNG_${trk_terr.value}_${trk_cat.value}_${trk_char.value}`);
-}
-
-function genUneditedFiles() {
-  out(`BNG_${unf_terr.value}_${unf_cat.value}_${unf_char.value}${unf_take.value}`);
-}
-
+window.onload = () => {
+  loadEpisodes();
+};
 </script>
 
 </body>
