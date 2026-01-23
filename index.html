@@ -4,43 +4,14 @@
 <meta charset="UTF-8">
 <title>Acamar Films Naming Tool</title>
 <style>
-body {
-  font-family: Arial, sans-serif;
-  margin: 20px;
-  background: #f5f5f5;
-}
-h1 {
-  color: #222;
-}
-.section {
-  background: #fff;
-  padding: 15px;
-  margin-bottom: 20px;
-  border-radius: 6px;
-}
-label {
-  display: block;
-  margin-top: 8px;
-}
-input, select, textarea {
-  width: 100%;
-  padding: 6px;
-  margin-top: 4px;
-}
-button {
-  margin-top: 10px;
-  padding: 8px 12px;
-  cursor: pointer;
-}
-textarea {
-  height: 120px;
-}
-.episodes {
-  max-height: 200px;
-  overflow-y: scroll;
-  border: 1px solid #ccc;
-  padding: 5px;
-}
+body { font-family: Arial, sans-serif; background:#f5f5f5; margin:20px; }
+h1 { color:#222; }
+.section { background:#fff; padding:15px; margin-bottom:20px; border-radius:6px; }
+label { display:block; margin-top:8px; }
+input, select, textarea { width:100%; padding:6px; margin-top:4px; }
+button { margin-top:10px; padding:8px 12px; cursor:pointer; }
+textarea { height:120px; }
+.episodes { max-height:200px; overflow-y:scroll; border:1px solid #ccc; padding:5px; }
 </style>
 </head>
 
@@ -48,7 +19,7 @@ textarea {
 
 <h1>🎬 Acamar Films Naming Tool</h1>
 
-<!-- EPISODE SELECTOR -->
+<!-- EPISODES -->
 <div class="section">
 <h2>Episode Selection (Batch)</h2>
 <button onclick="selectAllEpisodes()">Select All</button>
@@ -60,7 +31,7 @@ textarea {
 <h2>Screener Video Files</h2>
 <label>Date (YYMMDD)</label><input id="scr_date">
 <label>Language</label><input id="scr_lang">
-<label>Pass (Pass 1 / Pass 2 / AFL_FINAL)</label><input id="scr_pass">
+<label>Pass (Pass1 / Pass2 / AFL_FINAL)</label><input id="scr_pass">
 <button onclick="generateScreeners()">Generate</button>
 <textarea id="scr_output"></textarea>
 </div>
@@ -74,11 +45,19 @@ textarea {
 <textarea id="afl_output"></textarea>
 </div>
 
+<!-- PROTOOLS – STEMS -->
+<div class="section">
+<h2>ProTools Session (Stems)</h2>
+<label>Territory</label><input id="pts_territory">
+<button onclick="generatePTS()">Generate</button>
+<textarea id="pts_output"></textarea>
+</div>
+
 <!-- AUDIO STEMS -->
 <div class="section">
 <h2>Audio Stems</h2>
 <label>Territory</label><input id="stem_territory">
-<label>Format (Stereo / 5.1)</label>
+<label>Format</label>
 <select id="stem_format">
   <option>Stereo</option>
   <option>5.1</option>
@@ -93,10 +72,56 @@ textarea {
 <textarea id="stem_output"></textarea>
 </div>
 
-<!-- COPY -->
+<!-- PROTOOLS – DIALOGUE EDIT -->
+<div class="section">
+<h2>ProTools Session (Dialogue Edit)</h2>
+<label>Territory</label><input id="dx_territory">
+<button onclick="generateDX()">Generate</button>
+<textarea id="dx_output"></textarea>
+</div>
+
+<!-- RECORD / LINE FILES -->
+<div class="section">
+<h2>Record / Line Files</h2>
+<label>Territory</label><input id="line_territory">
+<label>Character Name</label><input id="line_character">
+<label>Actor Initials</label><input id="line_actor">
+<label>Line Number (e.g. Line037)</label><input id="line_number">
+<label>Take (_01 / _02 etc)</label><input id="line_take">
+<button onclick="generateLine()">Generate</button>
+<textarea id="line_output"></textarea>
+</div>
+
+<!-- EDITED LINE FILES -->
+<div class="section">
+<h2>Edited Line Files</h2>
+<label>Territory</label><input id="edit_territory">
+<label>Category</label><input id="edit_category">
+<label>Character Name</label><input id="edit_character">
+<label>Line Number</label><input id="edit_line_no">
+<label>Line (English)</label><input id="edit_line">
+<label>Take Letter</label><input id="edit_take">
+<button onclick="generateEditedLine()">Generate</button>
+<textarea id="edit_output"></textarea>
+</div>
+
+<!-- PROTOOLS – UNEDITED -->
+<div class="section">
+<h2>ProTools Session (Unedited Record Files)</h2>
+<label>Territory</label><input id="uned_territory">
+<label>Category</label><input id="uned_category">
+<label>Character Name</label><input id="uned_character">
+<label>Date (DDMMYY)</label><input id="uned_date">
+<button onclick="generateUnedited()">Generate</button>
+<textarea id="uned_output"></textarea>
+</div>
+
 <button onclick="copyAll()">📋 Copy All Outputs</button>
 
 <script>
+const sanitize = str =>
+  str.trim().replace(/\s+/g,"_").replace(/_+/g,"_");
+
 const episodes = [
 ["001","Fireworks"],["002","Bye Bye"],["003","Swing"],["004","Blocks"],
 ["005","Ducks"],["006","Smoothie"],["007","Frog"],["008","Car Park"],
@@ -137,54 +162,62 @@ const episodes = [
 ];
 
 const episodeList = document.getElementById("episodeList");
-episodes.forEach(e => {
+episodes.forEach(e=>{
   episodeList.innerHTML += `<label><input type="checkbox" value="${e[0]}|${e[1]}"> ${e[0]} – ${e[1]}</label>`;
 });
 
-function getSelectedEpisodes() {
-  return [...document.querySelectorAll(".episodes input:checked")]
-    .map(cb => cb.value.split("|"));
-}
+const getSelectedEpisodes = () =>
+  [...document.querySelectorAll(".episodes input:checked")]
+  .map(cb=>cb.value.split("|"));
 
-function selectAllEpisodes() {
-  document.querySelectorAll(".episodes input").forEach(cb => cb.checked = true);
-}
+const selectAllEpisodes = () =>
+  document.querySelectorAll(".episodes input").forEach(cb=>cb.checked=true);
 
-function generateScreeners() {
-  const d = scr_date.value;
-  const l = scr_lang.value;
-  const p = scr_pass.value;
-  scr_output.value = getSelectedEpisodes()
-    .map(e => `${d}_BNG_${l}_${e[0]}_${e[1]}_${p}.mp4`)
-    .join("\n");
-}
+const generateScreeners = () =>
+scr_output.value = getSelectedEpisodes().map(e =>
+sanitize(`${scr_date.value}_BNG_${scr_lang.value}_${e[0]}_${e[1]}_${scr_pass.value}.mp4`)
+).join("\n");
 
-function generateAFL() {
-  const d = afl_date.value;
-  const l = afl_lang.value;
-  afl_output.value = getSelectedEpisodes()
-    .map(e => `${d}_BNG_${l}_${e[0]}_${e[1]}_AFL_FINAL.mov`)
-    .join("\n");
-}
+const generateAFL = () =>
+afl_output.value = getSelectedEpisodes().map(e =>
+sanitize(`${afl_date.value}_BNG_${afl_lang.value}_${e[0]}_${e[1]}_AFL_FINAL.mov`)
+).join("\n");
 
-function generateStems() {
-  const t = stem_territory.value;
-  const f = stem_format.value;
-  const s = stem_type.value;
-  stem_output.value = getSelectedEpisodes()
-    .map(e => `BNG_${t}_${e[0]}_${e[1]}_${f}_${s}`)
-    .join("\n");
-}
+const generatePTS = () =>
+pts_output.value = getSelectedEpisodes().map(e =>
+sanitize(`BNG_${pts_territory.value}_${e[0]}_${e[1]}_ProTools`)
+).join("\n");
 
-function copyAll() {
-  const text = [
-    scr_output.value,
-    afl_output.value,
-    stem_output.value
-  ].join("\n\n");
-  navigator.clipboard.writeText(text);
-  alert("Copied to clipboard!");
-}
+const generateStems = () =>
+stem_output.value = getSelectedEpisodes().map(e =>
+sanitize(`BNG_${stem_territory.value}_${e[0]}_${e[1]}_${stem_format.value}_${stem_type.value}`)
+).join("\n");
+
+const generateDX = () =>
+dx_output.value = getSelectedEpisodes().map(e =>
+sanitize(`BNG_${dx_territory.value}_${e[0]}_${e[1]}_DX_Edit`)
+).join("\n");
+
+const generateLine = () =>
+line_output.value = getSelectedEpisodes().map(e =>
+sanitize(`BNG_${line_territory.value}_${e[0]}_${line_character.value}_${line_actor.value}_${line_number.value}${line_take.value}`)
+).join("\n");
+
+const generateEditedLine = () =>
+edit_output.value =
+sanitize(`BNG_${edit_territory.value}_${edit_category.value}_${edit_character.value}_Line${edit_line_no.value}_${edit_line.value}_${edit_take.value}`);
+
+const generateUnedited = () =>
+uned_output.value =
+sanitize(`BNG_${uned_territory.value}_${uned_category.value}_${uned_character.value}_ProToolsSession_${uned_date.value}`);
+
+const copyAll = () => {
+navigator.clipboard.writeText(
+[scr_output.value,afl_output.value,pts_output.value,stem_output.value,
+dx_output.value,line_output.value,edit_output.value,uned_output.value].join("\n\n")
+);
+alert("Copied to clipboard!");
+};
 </script>
 
 </body>
