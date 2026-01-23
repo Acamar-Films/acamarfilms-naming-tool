@@ -1,157 +1,190 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Acamar Films Naming Convention Generator</title>
-  <style>
-    body { font-family: Arial; max-width: 1000px; margin: 30px auto; padding: 20px; }
-    select, input, textarea, button {
-      width: 100%;
-      padding: 10px;
-      margin: 8px 0 16px;
-      font-size: 14px;
-    }
-    textarea { height: 200px; }
-    .tool { display: none; }
-    #output { white-space: pre; background: #f3f3f3; border: 1px solid #ccc; padding: 15px; }
-    .row { display: flex; gap: 10px; }
-    .row button { width: auto; flex: 1; }
-  </style>
+<meta charset="UTF-8">
+<title>Acamar Films Naming Tool</title>
+<style>
+body {
+  font-family: Arial, sans-serif;
+  margin: 20px;
+  background: #f5f5f5;
+}
+h1 {
+  color: #222;
+}
+.section {
+  background: #fff;
+  padding: 15px;
+  margin-bottom: 20px;
+  border-radius: 6px;
+}
+label {
+  display: block;
+  margin-top: 8px;
+}
+input, select, textarea {
+  width: 100%;
+  padding: 6px;
+  margin-top: 4px;
+}
+button {
+  margin-top: 10px;
+  padding: 8px 12px;
+  cursor: pointer;
+}
+textarea {
+  height: 120px;
+}
+.episodes {
+  max-height: 200px;
+  overflow-y: scroll;
+  border: 1px solid #ccc;
+  padding: 5px;
+}
+</style>
 </head>
+
 <body>
 
-<h1>Acamar Films Naming Convention Generator</h1>
+<h1>🎬 Acamar Films Naming Tool</h1>
 
-<!-- Tool Selector -->
-<label>Choose Tool</label>
-<select id="toolSelect" onchange="showTool()">
-  <option value="">-- Select --</option>
-  <option value="stems">Audio Stems</option>
+<!-- EPISODE SELECTOR -->
+<div class="section">
+<h2>Episode Selection (Batch)</h2>
+<button onclick="selectAllEpisodes()">Select All</button>
+<div class="episodes" id="episodeList"></div>
+</div>
+
+<!-- SCREENER FILES -->
+<div class="section">
+<h2>Screener Video Files</h2>
+<label>Date (YYMMDD)</label><input id="scr_date">
+<label>Language</label><input id="scr_lang">
+<label>Pass (Pass 1 / Pass 2 / AFL_FINAL)</label><input id="scr_pass">
+<button onclick="generateScreeners()">Generate</button>
+<textarea id="scr_output"></textarea>
+</div>
+
+<!-- AFL MASTER FILES -->
+<div class="section">
+<h2>AFL Master Files</h2>
+<label>Date (YYMMDD)</label><input id="afl_date">
+<label>Language Code</label><input id="afl_lang">
+<button onclick="generateAFL()">Generate</button>
+<textarea id="afl_output"></textarea>
+</div>
+
+<!-- AUDIO STEMS -->
+<div class="section">
+<h2>Audio Stems</h2>
+<label>Territory</label><input id="stem_territory">
+<label>Format (Stereo / 5.1)</label>
+<select id="stem_format">
+  <option>Stereo</option>
+  <option>5.1</option>
 </select>
-
-<!-- Episode Manager -->
-<h2>Episode List</h2>
-<textarea id="episodeEditor"
-placeholder="EP01|Pilot
-EP02|The First Test
-EP03|Unexpected Results"></textarea>
-
-<div class="row">
-  <button onclick="saveEpisodes()">Save Episodes</button>
-  <button onclick="loadEpisodes()">Load Episodes</button>
+<label>Stem Type</label>
+<select id="stem_type">
+  <option value="FMX">Full Mix (FMX)</option>
+  <option value="DX">Dialogue (DX)</option>
+  <option value="ME">M&E (ME)</option>
+</select>
+<button onclick="generateStems()">Generate</button>
+<textarea id="stem_output"></textarea>
 </div>
 
-<hr>
-
-<!-- Audio Stems -->
-<div id="stems" class="tool">
-  <h3>Audio Stems (Batch Enabled)</h3>
-
-  <label>Territory</label>
-  <input id="stm_terr" placeholder="US">
-
-  <label>Episode</label>
-  <select id="stm_episode"></select>
-
-  <label>Format (Stereo / 5.1)</label>
-  <input id="stm_fmt" placeholder="5.1">
-
-  <label>Stem Types (comma separated)</label>
-  <input id="stm_types" placeholder="FMX, DX, ME">
-
-  <button onclick="genStems()">Generate</button>
-</div>
-
-<h3>Output</h3>
-<div id="output"></div>
-
-<div class="row">
-  <button onclick="copyOutput()">Copy to Clipboard</button>
-  <button onclick="downloadCSV()">Download CSV</button>
-</div>
+<!-- COPY -->
+<button onclick="copyAll()">📋 Copy All Outputs</button>
 
 <script>
-/* ---------------- EPISODES ---------------- */
+const episodes = [
+["001","Fireworks"],["002","Bye Bye"],["003","Swing"],["004","Blocks"],
+["005","Ducks"],["006","Smoothie"],["007","Frog"],["008","Car Park"],
+["009","Shadow"],["010","Musical Statues"],["011","Voo Voo"],
+["012","Here I Go"],["013","Growing"],["014","Atchoo"],
+["015","Hide & Seek"],["016","Bake"],["017","Train"],
+["018","Say Goodbye"],["019","Lost"],["020","Picnic"],
+["021","Balloon"],["022","Dressing Up"],["023","Something for Sula"],
+["024","Knack"],["025","Hearts"],["026","Storytime"],
+["027","Giving"],["028","Hula Hoop"],["029","Big Boots"],
+["030","Bubbles"],["031","Paddling Pool"],["032","Blankie"],
+["033","Boo"],["034","Talkie Taxi"],["035","Kite"],
+["036","More"],["037","Sparkle Magic"],["038","Tree"],
+["039","Where's Flop?"],["040","Lunchbox"],
+["041","Sleepover"],["042","Surprise Machine"],["043","Dizzy"],
+["044","House"],["045","Ice Lolly"],["046","Mural"],
+["047","Hiding"],["048","Sandcastle"],["049","Acorns"],
+["050","Jingly Shoes"],["051","Looking After Flop"],
+["052","Music"],["053","Hippoty Hoppity Voosh"],
+["054","Dragon Breath"],["055","Come On Charlie"],
+["056","Skateboard"],["057","Butterfly"],["058","Chalk Dinosaur"],
+["059","Potato"],["060","Wellies"],["061","Ice Cream"],
+["062","Plasters"],["063","Cat"],["064","Dandelion"],
+["065","Voosh"],["066","Nature Explorer"],["067","Choosing"],
+["068","Dark"],["069","Stuck"],["070","Cake"],
+["071","Not Yours"],["072","Mine"],["073","Lunch"],
+["074","Woof"],["075","Eggy Head"],["076","Toy Party"],
+["077","Mobile Phone"],["078","Show"],["079","Nicky"],
+["080","Halloween"],["081","Face Paint"],["082","Vaccination"],
+["083","Leaf Pictures"],["084","Fire Engine"],["085","Squiggle"],
+["086","PJ Party"],["087","Hose Pipe"],["088","Birthday"],
+["089","Playhouse"],["090","Names"],["091","Camping"],
+["092","Bus Ride"],["093","Magnets"],["094","Shop"],
+["095","Ball"],["096","Accident"],["097","Puppet Show"],
+["098","Charlie Did It"],["099","Helping Hoppity"],
+["100","Story"],["101","Skipping"],["102","Fossils"],
+["103","Presents"],["104","Snow"]
+];
 
-let episodes = [];
+const episodeList = document.getElementById("episodeList");
+episodes.forEach(e => {
+  episodeList.innerHTML += `<label><input type="checkbox" value="${e[0]}|${e[1]}"> ${e[0]} – ${e[1]}</label>`;
+});
 
-function saveEpisodes() {
-  const lines = episodeEditor.value.split("\n");
-  episodes = lines.map(l => {
-    const [num, name] = l.split("|");
-    return { num: num?.trim(), name: name?.trim() };
-  }).filter(e => e.num && e.name);
-
-  localStorage.setItem("acamarEpisodes", JSON.stringify(episodes));
-  populateEpisodeDropdown();
-  alert("Episodes saved!");
+function getSelectedEpisodes() {
+  return [...document.querySelectorAll(".episodes input:checked")]
+    .map(cb => cb.value.split("|"));
 }
 
-function loadEpisodes() {
-  const stored = localStorage.getItem("acamarEpisodes");
-  if (!stored) return;
-
-  episodes = JSON.parse(stored);
-  episodeEditor.value = episodes.map(e => `${e.num}|${e.name}`).join("\n");
-  populateEpisodeDropdown();
+function selectAllEpisodes() {
+  document.querySelectorAll(".episodes input").forEach(cb => cb.checked = true);
 }
 
-function populateEpisodeDropdown() {
-  const sel = document.getElementById("stm_episode");
-  sel.innerHTML = "";
-  episodes.forEach(e => {
-    const opt = document.createElement("option");
-    opt.value = `${e.num}_${e.name}`;
-    opt.textContent = `${e.num} – ${e.name}`;
-    sel.appendChild(opt);
-  });
+function generateScreeners() {
+  const d = scr_date.value;
+  const l = scr_lang.value;
+  const p = scr_pass.value;
+  scr_output.value = getSelectedEpisodes()
+    .map(e => `${d}_BNG_${l}_${e[0]}_${e[1]}_${p}.mp4`)
+    .join("\n");
 }
 
-/* ---------------- TOOLS ---------------- */
-
-function showTool() {
-  document.querySelectorAll('.tool').forEach(t => t.style.display = "none");
-  const id = toolSelect.value;
-  if (id) document.getElementById(id).style.display = "block";
-  output.textContent = "";
+function generateAFL() {
+  const d = afl_date.value;
+  const l = afl_lang.value;
+  afl_output.value = getSelectedEpisodes()
+    .map(e => `${d}_BNG_${l}_${e[0]}_${e[1]}_AFL_FINAL.mov`)
+    .join("\n");
 }
 
-/* ---------------- GENERATORS ---------------- */
-
-let lastOutput = [];
-
-function genStems() {
-  const types = stm_types.value.split(",").map(t => t.trim());
-  const ep = stm_episode.value;
-
-  lastOutput = types.map(type =>
-    `BNG_${stm_terr.value}_${ep}_${stm_fmt.value}_${type}`
-  );
-
-  output.textContent = lastOutput.join("\n");
+function generateStems() {
+  const t = stem_territory.value;
+  const f = stem_format.value;
+  const s = stem_type.value;
+  stem_output.value = getSelectedEpisodes()
+    .map(e => `BNG_${t}_${e[0]}_${e[1]}_${f}_${s}`)
+    .join("\n");
 }
 
-/* ---------------- UTILITIES ---------------- */
-
-function copyOutput() {
-  navigator.clipboard.writeText(output.textContent);
+function copyAll() {
+  const text = [
+    scr_output.value,
+    afl_output.value,
+    stem_output.value
+  ].join("\n\n");
+  navigator.clipboard.writeText(text);
   alert("Copied to clipboard!");
 }
-
-function downloadCSV() {
-  if (!lastOutput.length) return;
-  const csv = lastOutput.join("\n");
-  const blob = new Blob([csv], { type: "text/csv" });
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(blob);
-  a.download = "Acamar_Filenames.csv";
-  a.click();
-}
-
-/* ---------------- INIT ---------------- */
-
-window.onload = () => {
-  loadEpisodes();
-};
 </script>
 
 </body>
